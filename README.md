@@ -69,9 +69,16 @@ UI доступен по http://localhost:15672/
 
 ## (2) Отправьте несколько тем для сообщений через web UI ## 
 
+создал несколько очередей
+<img width="615" height="460" alt="image" src="https://github.com/user-attachments/assets/28afdef2-9cb2-4c01-9137-5da938efc600" />
+
+отправить сообщение со вкладки Exchanges(AMQP default)
+<img width="844" height="826" alt="image" src="https://github.com/user-attachments/assets/89fc24eb-1d4a-4ae1-bdfb-ca0dfac9cf56" />
 
 
 ## (3) Прочитайте их, используя web UI в браузере ##
+<img width="680" height="789" alt="image" src="https://github.com/user-attachments/assets/7e4fd1d6-c8e1-4bfa-bc0a-c038b16acd7c" />
+прочитал сообщения в очереди queue-any
 
 
 ## (4) Отправьте и прочитайте сообщения программно ##
