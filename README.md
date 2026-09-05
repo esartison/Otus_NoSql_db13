@@ -20,73 +20,59 @@
 
 ## (1) Запустите RabbitMQ (можно в docker) ## 
 
-Использую пример из [otus-nosql](https://github.com/evgnep/otus-nosql) 
+Использую пример из [How to Run RabbitMQ in Docker Compose](https://medium.com/@kaloyanmanev/how-to-run-rabbitmq-in-docker-compose-e5baccc3e644) 
 
 Поднял docker контейнер
 ```
-student:~/kafka$ cat docker-compose.yml 
-
 services:
-  broker:
-    image: apache/kafka:latest
-    container_name: broker
+  rabbitmq:
+    image: rabbitmq:latest
+    container_name: rabbitmq
+    restart: always
+    ports:
+      - 5672:5672
+      - 15672:15672
     environment:
-      KAFKA_NODE_ID: 1
-      KAFKA_PROCESS_ROLES: broker,controller
-      KAFKA_LISTENERS: PLAINTEXT://localhost:9092,CONTROLLER://localhost:9093
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
-      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
-      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
-      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@localhost:9093
-      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
-      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
-      KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS: 0
-      KAFKA_NUM_PARTITIONS: 3
+      RABBITMQ_DEFAULT_USER: kalo
+      RABBITMQ_DEFAULT_PASS: kalo
+    configs:
+      - source: rabbitmq-plugins
+        target: /etc/rabbitmq/enabled_plugins
+    volumes:
+      - rabbitmq-lib:/var/lib/rabbitmq/
+      - rabbitmq-log:/var/log/rabbitmq
+
+configs:
+  rabbitmq-plugins:
+    content: "[rabbitmq_management]."  
+
+volumes:
+  rabbitmq-lib:
+    driver: local
+  rabbitmq-log:
+    driver: local
 ```
 
 проверка статуса
 ```
-student:~/kafka$ docker ps
-CONTAINER ID   IMAGE                 COMMAND                  CREATED         STATUS         PORTS      NAMES
-cbdedfc54452   apache/kafka:latest   "/__cacert_entrypoin…"   5 minutes ago   Up 5 minutes   9092/tcp   broker
-```
-
-Создать топик и проверить что он создался 
-```
-student:~/kafka$ docker exec -it broker \
-  /opt/kafka/bin/kafka-topics.sh \
-  --create \
-  --bootstrap-server localhost:9092 \
-  --replication-factor 1 \
-  --partitions 1 \
-  --topic my-test-topic
-Created topic my-test-topic.
-
-student:~/kafka$ docker exec -it broker /opt/kafka/bin/kafka-topics.sh --list --bootstrap-server localhost:9092
-my-test-topic
+student:~$ docker ps
+CONTAINER ID   IMAGE             COMMAND                  CREATED          STATUS          PORTS                                                                                                                                          NAMES
+8a5da38db5b5   rabbitmq:latest   "docker-entrypoint.s…"   37 seconds ago   Up 34 seconds   4369/tcp, 0.0.0.0:5672->5672/tcp, [::]:5672->5672/tcp, 5671/tcp, 15691-15692/tcp, 25672/tcp, 0.0.0.0:15672->15672/tcp, [::]:15672->15672/tcp   rabbitmq
 
 ```
+
+UI доступен по http://localhost:15672/
+<img width="1185" height="741" alt="image" src="https://github.com/user-attachments/assets/5acdb347-9752-4172-aae8-aee40d7a66c8" />
+
 
 
 
 ## (2) Отправьте несколько тем для сообщений через web UI ## 
 
-```
-student:~/kafka$ echo "testtt 123" | docker exec -i broker /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic my-test-topic 
-student:~/kafka$ echo "testtt 321" | docker exec -i broker /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic my-test-topic
-student:~/kafka$ echo "testtt 555521" | docker exec -i broker /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic my-test-topic
-```
+
 
 ## (3) Прочитайте их, используя web UI в браузере ##
 
-прочитал сообщения
-```
-student:~/kafka$ docker exec -i broker /opt/kafka/bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --topic my-test-topic 
-The consumer rebalance protocol (KIP-848) is production-ready! Set group.protocol=consumer to try it out. See https://kafka.apache.org/documentation/#consumer_rebalance_protocol
-testtt 321
-testtt 555521
-```
 
 ## (4) Отправьте и прочитайте сообщения программно ##
 
