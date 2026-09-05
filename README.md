@@ -83,41 +83,12 @@ UI доступен по http://localhost:15672/
 
 ## (4) Отправьте и прочитайте сообщения программно ##
 
-Использую след питон скрипт
+прочитал сообщения через CURL
 ```
-from kafka import KafkaConsumer
-
-# Initialize the consumer and subscribe to the topic
-consumer = KafkaConsumer(
-    'my-kafka-topic',                       # The Kafka topic
-    bootstrap_servers=['localhost:9092'],   # Your Kafka broker address
-    group_id='my-test-topic',             # Consumer group ID
-    auto_offset_reset='earliest',           # Start from the beginning if no offset exists
-    value_deserializer=lambda x: x.decode('utf-8') # Automatically decode bytes to string
-)
-
-print("Listening for messages...")
-
-try:
-    # The consumer object acts as an infinite iterator
-    for msg in consumer:
-        print(f"Partition: {msg.value}")
-
-except KeyboardInterrupt:
-    print("\nStopping consumer...")
-finally:
-    # Ensure connections are closed
-    consumer.close()
-```
-
-отправил сообщение
-```
-student:~/kafka$ echo "testtt123" | docker exec -i broker /opt/kafka/bin/kafka-console-producer.sh --bootstrap-server localhost:9092 --topic my-test-topic
-```
-
-Прочитаем сообщения из топика
-```
-python test.py
-Listening for messages..
-testtt123
+student:~$ curl -u kalo:kalo \
+  -H "Content-Type: application/json" \
+  -X POST \
+  -d '{"count":2, "ackmode":"ack_requeue_true", "encoding":"auto"}' \
+  http://localhost:15672/api/queues/%2F/queue-any/get
+[{"payload_bytes":19,"redelivered":true,"exchange":"","routing_key":"queue-any","message_count":1,"properties":{"delivery_mode":2,"headers":{}},"payload":"testing 1st message","payload_encoding":"string"},{"payload_bytes":19,"redelivered":true,"exchange":"","routing_key":"queue-any","message_count":0,"properties":{"delivery_mode":2,"headers":{}},"payload":"testing 2nd message","payload_encoding":"string"}]
 ```
